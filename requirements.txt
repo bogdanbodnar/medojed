@@ -1,0 +1,6 @@
+beautifulsoup4==4.4.1
+bottle==0.12.9
+bs4==0.0.1
+CherryPy==5.1.0
+SQLAlchemy==1.0.12
+WTForms==2.1
