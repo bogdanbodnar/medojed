@@ -17,7 +17,7 @@ Check youre version of `pip` and `python` ( >= 3.5 ) :
 ```
 (env) $ pip --version
 ```
-Istall dependensy from `requirements.txt` :
+Istall dependency from `requirements.txt` :
 ```
 (env) $ pip install -r ./requirements.txt
 ```
