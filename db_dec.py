@@ -10,7 +10,7 @@ Base = declarative_base()
 class Page(Base):
     __tablename__ = 'page'
     id = Column(Integer, primary_key=True)
-    url = Column(String(250))
+    url = Column(String(250), unique=True)
     text = Column(String(250))
     rank = Column(Integer)
 
