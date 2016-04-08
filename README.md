@@ -7,7 +7,7 @@ Install `Medojed`:
 $ git clone git@github.com:bodya3d/medojed.git
 $ cd medojed
 ```
-Install and uprgade `virualenv`:
+Install and uprgade `virtualenv`:
 ```
 $ pyvenv ./env
 $ source env/bin/activate
