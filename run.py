@@ -15,17 +15,6 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-
-@route('/<filepath:path>')
-def server_static(filepath):
-    return static_file(filepath, root='./static')
-
-
-@route('/hello/<name>')
-def hello(name="asdsd"):
-    return template('<b>Hello {{name}}</b>!', name=name)
-
-
 class CrawlerFormProcessor(Form):
     url = StringField('URL', [validators.URL(require_tld=False, message="Must be valid URL")],
                       render_kw={"placeholder": "https://example.com"})
@@ -201,5 +190,9 @@ def page_remove_all():
     redirect("/pages")
     return locals()
 
+
+@route('/<filepath:path>')
+def server_static(filepath):
+    return static_file(filepath, root='./static')
 
 run(server='cherrypy', host='localhost', port=8080, debug=True, reloader=True)
