@@ -1,4 +1,4 @@
-from bottle import Bottle, view, request,redirect
+from bottle import Bottle, view, request, redirect
 from wtforms import Form, StringField, IntegerField, BooleanField, validators
 
 import urllib.request
@@ -21,6 +21,7 @@ Base.metadata.create_all(engine)
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
 
 class CrawlerFormProcessor(Form):
     url = StringField('URL', [validators.URL(require_tld=False, message="Must be valid URL")],
@@ -160,10 +161,10 @@ def crawler():
                     session.add(new_page)
                     session.commit()
             except:
-               session.rollback()
-               raise
+                session.rollback()
+                raise
             finally:
-               session.close()
+                session.close()
         session.commit()
         print("Finish: " + form.url.data)
         redirect("/pages")

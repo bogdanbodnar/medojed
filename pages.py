@@ -2,7 +2,7 @@ from bottle import view, redirect, Bottle
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from model import Base, Page,Relation
+from model import Base, Page, Relation
 from sqlalchemy.engine.url import URL
 
 import config

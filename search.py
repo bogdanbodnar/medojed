@@ -22,6 +22,7 @@ sa.orm.configure_mappers()
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 # Base = declarative_base()
 
 
@@ -39,8 +40,8 @@ def search(s_req):
         redirect("/search/" + req)
 
     query = session.query(Page)
-    pages = ss.search(query,'123')
-    print(pages.all() )
+    pages = ss.search(query, '123')
+    print(pages.all())
 
     return locals()
 
@@ -54,4 +55,3 @@ def search():
         req = form.request.data
         redirect("/search/" + req)
     return locals()
-
