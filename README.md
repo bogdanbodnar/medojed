@@ -29,10 +29,10 @@ On Ubuntu 14.04 something like this:
 ```
 $ sudo -u postgres createdb medojed
 $ sudo -u postgres psql medojed
-\>\>\>psql (9.5.2)
-\>\>\>Type "help" for help.
+>>>psql (9.5.2)
+>>>Type "help" for help.
 medojed=# ALTER USER postgres with encrypted password 'some_password';
-\>\>\> ALTER ROLE
+>>> ALTER ROLE
 medojed=# \quit
 ```
 You also need to setup a `config.py`.
