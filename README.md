@@ -1,4 +1,4 @@
-# MEDOJED
+# MEDOJED / HONEY BADGER
 Hypertext search web-application 
 
 ##Installation
