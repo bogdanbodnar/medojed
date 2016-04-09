@@ -153,9 +153,10 @@ def crawler():
         for page in results:
             url = page[0]
             text = page[1]
-            new_page = Page(url=u'Google google 123 123', text='Google google 123 123', rank=0)
+            new_page = Page(url=url, text=text, rank=0)
             try:
                 if session.query(Page).filter(Page.url == url).count() == 0:
+                    print("Added: " + url)
                     session.add(new_page)
                     session.commit()
             except:
@@ -164,6 +165,7 @@ def crawler():
             finally:
                session.close()
         session.commit()
+        print("Finish: " + form.url.data)
         redirect("/pages")
 
     return locals()
