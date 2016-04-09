@@ -23,8 +23,8 @@ Install dependency from `requirements.txt` :
 ```
 Create and declare database:
 
-1. Create postgreSQL database `medojed`:
-This step depends on your system. You must have installed `PostgreSQL` version `9.5` 
+ - 1.Create postgreSQL database `medojed`:
+This step depends on your system. You must have installed `PostgreSQL` version `9.5`.
 On Ubuntu 14.04 something like this:
 ```
 $ sudo -u postgres createdb medojed
@@ -35,9 +35,8 @@ medojed=# ALTER USER postgres with encrypted password 'some_password';
 >>> ALTER ROLE
 medojed=# \quit
 ```
-You also need to setup a `config.py`.
-
-2. Run `model.py`
+ - 2.You also need to setup a `config.py`.
+ - 3.Run `model.py`
 ```
 (env) $ python model.py 
 ```
@@ -48,3 +47,9 @@ Run Medojed from `run.py`:
 (env) $ python medojed.py
 ```
 Go to http://localhost:8080/ and enjoy!
+
+## Tasks
+
+- [ ] Multi-thread crawler
+- [ ] Full-text search
+- [ ] Ranking
