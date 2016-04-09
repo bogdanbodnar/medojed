@@ -14,19 +14,20 @@
 
     <!-- Bootstrap core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <link href="/css/main.css" rel="stylesheet">
 
     <!-- IE-->
     <link href="/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
     <script src="/js/ie8-responsive-file-warning.js"></script>
     <![endif]-->
     <script src="/js/ie-emulation-modes-warning.js"></script>
+    <!-- Custom styles for this template -->
+    <link href="/css/main.css" rel="stylesheet">
 
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container">
+    <a class="navbar-brand" href="/"><img src="/img/logo.png" height="24"></a>
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                     aria-expanded="false" aria-controls="navbar">
@@ -35,7 +36,6 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/"><img src="/img/logo.png" height="24" width="24"></a>
             <!--<a class="navbar-brand" href="/">Medojed</a>-->
         </div>
         <div class="navbar-header">

@@ -1,4 +1,4 @@
-from bottle import route, view, run, request, get, post, debug, template, static_file, error, redirect
+from bottle import Bottle, view, request,redirect
 from wtforms import Form, StringField, IntegerField, BooleanField, validators
 
 import urllib.request
@@ -6,12 +6,19 @@ from bs4 import BeautifulSoup
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from model import Base, Page, Relation
+from sqlalchemy.engine.url import URL
+import sqlalchemy as sa
 
-from db_dec import Base, Page, Relation
+import config
 
-#DB connection
-engine = create_engine('sqlite:///medojed.db', connect_args={'check_same_thread': False})
-Base.metadata.bind = engine
+crawler_app = Bottle()
+
+engine = create_engine(URL(**config.DATABASE))
+# Base.metadata.bind = engine
+sa.orm.configure_mappers()
+Base.metadata.create_all(engine)
+
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
@@ -21,10 +28,6 @@ class CrawlerFormProcessor(Form):
     depth = IntegerField('Depth', [validators.NumberRange(min=1, message="Must be > 0")], default=1)
     max_pages = IntegerField('Maximum pages', [validators.NumberRange(min=1, message="Must be > 0")], default=1000)
     uel = BooleanField('Uninclude external links')
-
-
-class SearchFormProcessor(Form):
-    request = StringField('Request:', [validators.length(min=3)], render_kw={"placeholder": "Request example"})
 
 
 def getOutlinks(website, removeExternalLinks):
@@ -140,14 +143,8 @@ def getOutlinks(website, removeExternalLinks):
     return results
 
 
-@route('/')
-@view('index')
-def index():
-    return locals()
-
-
-@get('/crawler')
-@post('/crawler')
+@crawler_app.get('/crawler')
+@crawler_app.post('/crawler')
 @view('crawler')
 def crawler():
     form = CrawlerFormProcessor(request.forms.decode())
@@ -156,43 +153,17 @@ def crawler():
         for page in results:
             url = page[0]
             text = page[1]
-            new_page = Page(url=url, text=text, rank=0)
-            session.add(new_page)
+            new_page = Page(url=u'Google google 123 123', text='Google google 123 123', rank=0)
+            try:
+                if session.query(Page).filter(Page.url == url).count() == 0:
+                    session.add(new_page)
+                    session.commit()
+            except:
+               session.rollback()
+               raise
+            finally:
+               session.close()
         session.commit()
         redirect("/pages")
 
     return locals()
-
-
-@get('/search')
-@post('/search')
-@view('search')
-def search():
-    form = SearchFormProcessor(request.forms.decode())
-    if request.method == 'POST' and form.validate():
-        req = form.request.data
-        redirect("/search/" + req)
-    return locals()
-
-
-@route('/pages')
-@view('pages')
-def pages():
-    pages = session.query(Page).all()
-    return locals()
-
-
-@route('/pages/remove')
-@view('pages')
-def page_remove_all():
-    session.query(Page).delete()
-    session.commit()
-    redirect("/pages")
-    return locals()
-
-
-@route('/<filepath:path>')
-def server_static(filepath):
-    return static_file(filepath, root='./static')
-
-run(server='cherrypy', host='localhost', port=8080, debug=True, reloader=True)
