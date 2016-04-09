@@ -2,5 +2,12 @@ beautifulsoup4==4.4.1
 bottle==0.12.9
 bs4==0.0.1
 CherryPy==5.1.0
+decorator==4.0.9
+psycopg2==2.6.1
+pyparsing==2.1.1
+six==1.10.0
 SQLAlchemy==1.0.12
+SQLAlchemy-Searchable==0.10.0
+SQLAlchemy-Utils==0.32.1
+validators==0.10
 WTForms==2.1
