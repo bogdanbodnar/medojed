@@ -1,7 +1,14 @@
 body {
-  padding-top: 50px;
+    padding-top: 50px;
 }
+
 .template {
-  padding: 40px 15px;
-  text-align: center;
+    padding: 40px 15px;
+    text-align: center;
+    max-height: 100%
+}
+
+.center-block .img-responsive {
+    margin: auto;
+    max-height: 100%
 }

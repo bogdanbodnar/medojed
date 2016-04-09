@@ -1,6 +1,5 @@
 from bottle import Bottle, static_file, view
 
-
 from crawler import crawler_app
 from pages import pages_app
 from search import search_app
@@ -32,6 +31,7 @@ def server_static(filepath):
 @root_app.route('/fonts/<filepath:path>')
 def server_static(filepath):
     return static_file(filepath, root='./static/fonts')
+
 
 if __name__ == '__main__':
     root_app.merge(crawler_app)
