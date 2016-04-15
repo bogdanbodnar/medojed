@@ -2,7 +2,6 @@ from bottle import Bottle, view, request, redirect
 from wtforms import Form, StringField, IntegerField, BooleanField, validators
 
 import urllib.request
-from bs4 import BeautifulSoup
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,6 +10,15 @@ from sqlalchemy.engine.url import URL
 import sqlalchemy as sa
 
 import config
+
+import urllib.request
+import urllib.parse
+import urllib.robotparser
+from bs4 import BeautifulSoup
+from queue import Queue
+import threading
+import time
+import gzip
 
 crawler_app = Bottle()
 
@@ -28,108 +36,124 @@ class CrawlerFormProcessor(Form):
                       render_kw={"placeholder": "https://example.com"})
     depth = IntegerField('Depth', [validators.NumberRange(min=1, message="Must be > 0")], default=1)
     max_pages = IntegerField('Maximum pages', [validators.NumberRange(min=1, message="Must be > 0")], default=1000)
-    uel = BooleanField('Uninclude external links')
+    uel = BooleanField('Include external links')
 
+db_lock = threading.Lock()
 
-def getOutlinks(website, removeExternalLinks):
-    results = []
-
-    # add 'http' to the link if needed
-    if website.find("http://") != 0 and website.find("https://") != 0:
-        website = "http://" + website
-
-    # remove / in the end
-    while website[-1:] == '/':
-        website = website[:-1]
-
-    print('website', website)
-    # domain base
-    base = website[7:]
-    slpos = base.find('/')
-    if slpos != -1:
-        base = base[:slpos]
-    if base.find("www.") == 0:
-        base = base[4:]
-    print("BASE = ", base)
-
-    # get header and content
-    try:
-        with urllib.request.urlopen(website) as url:
-            info = url.info()
-            page = url.read()
-    except IOError:
-        print("Couldn't open url", website)
-        return
-
-    # discard non-html
-    if info['Content-Type'].find("html") == -1:
-        print("Error : It's not an html page!")
-        return
-
-    # prepare soup
-
-    soup = BeautifulSoup(page, "html.parser")
-
-    for link in soup.find_all('a'):
-        temp = link.get('href')
-
-        # skip empty
-        if temp is None:
-            continue
-
-        if len(temp) == 0:
-            continue
-
-        # fix relative links
-        if temp[0] == '/':
-            temp = website + temp
-        elif temp[0] != 'h':
-            temp = website + '/' + temp
-
-        # throw away anchors
-        if temp[0] == '#':
-            continue
-
-        # cut anchors from urls at the end
-        if temp.rfind('#') != -1:
-            temp = temp[:temp.rfind('#')]
-
-        # throw away 'http' part
-        httppos = temp.rfind("://")
-        if httppos != -1:
-            temp = temp[httppos + 3:]
-
-        # throw away the 'www' part
-        if temp.find("www.") == 0:
-            temp = temp[4:]
-
-        # throw away slash at the end
-        if temp[-1:] == '/':
-            temp = temp[:-1]
-
-        # throwaway javascript: or mailto:
-        if temp.find(":") != -1:
-            continue
-
-        if removeExternalLinks == True:
-            ws = temp.find(base)
-            sl = temp.find("/")
-            if ws == -1 or sl < ws:
-                continue
-
+def add_page_with_text_to_database(page, text):
+    with db_lock:
+        new_page = Page(url=page, text=text, rank=0)
         try:
-            with urllib.request.urlopen("http://" + temp) as url:
-                info = url.info()
-                page = url.read()
-        except IOError:
-            print("Couldn't open url", website)
+            if session.query(Page).filter(Page.url == page).count() == 0:
+                print("Added: " + page)
+                session.add(new_page)
+                session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
+
+def add_page_pair_to_database(from_page, to_page):
+    print("From:", from_page, "to:", to_page)
+
+
+class Crawler:
+
+    def __init__(self, website, depth=3, pages_limit=0, threads_number=16, remove_external_links=True):
+        # settings
+        self.website = self.make_requestable_link(website)
+        self.depth = depth
+        self.pages_limit = pages_limit
+        self.threads_number = threads_number
+        self.remove_external_links = remove_external_links
+        self.base = self.make_base(self.website)
+        print("Crawler initialized!")
+        print("Website = ", self.website)
+        print("Base = ", self.base)
+
+        # threading
+        self.q = Queue()
+        self.processed_lock = threading.Lock()
+        self.pages_counter_lock = threading.Lock()
+
+        # processing
+        self.processed = set()
+        self.robot_parser = urllib.robotparser.RobotFileParser()
+        self.current_pages_processed = 1
+
+        # output
+        self.dictionary = {}
+
+    @classmethod
+    def make_requestable_link(cls, website):
+        # add 'http' to the link if needed
+        if website.find("http://") != 0 and website.find("https://") != 0:
+            website = "http://" + website
+        return website
+
+    @classmethod
+    def make_base(cls, website):
+        # domain base
+        temp_base = website[7:]
+        slash_pos = temp_base.find('/')
+        if slash_pos != -1:
+            temp_base = temp_base[:slash_pos]
+        temp_base = ".".join(temp_base.split(".")[-2:])
+        # print("Base =", temp_base)
+        return temp_base
+
+    def get_outlinks(self, wb):
+
+        # init resulting set
+        results = set()
+
+        # print('Website link :', wb)
+        request = urllib.request.Request(
+            wb,
+            headers={
+                "Accept-Encoding": "gzip"
+            })
+
+        # get header and content
+        gzip_ = False
+        try:
+            with urllib.request.urlopen(request, timeout=15) as url:
+                info = url.info()
+                # print(info["Content-Encoding"])
+                if info["Content-Encoding"] == "gzip":
+                    gzip_ = True
+        except IOError as e:
+            print("Couldn't get info for url", wb, e)
+            return set()
+
+        # discard non-html
+        if info is None:
+            return set()
+        if info['Content-Type'].find("html") == -1:
+            print("Error : It's not an html page!", wb)
+            return set()
+
+        # get header and content
+        try:
+            with urllib.request.urlopen(request, timeout=15) as url:
+                if not gzip_:
+                    page = url.read()
+                else:
+                    page = gzip.decompress(url.read())
+                    # print("Decompressed")
+        except IOError:
+            print("Couldn't open url", wb)
+            return set()
+
+        # prepare soup
         soup = BeautifulSoup(page, "html.parser")
 
+        # http://stackoverflow.com/a/24618186
         for script in soup(["script", "style"]):
             script.extract()  # rip it out
 
-        # get text
         text = soup.get_text()
 
         # break into lines and remove leading and trailing space on each
@@ -139,9 +163,135 @@ def getOutlinks(website, removeExternalLinks):
         # drop blank lines
         text = '\n'.join(chunk for chunk in chunks if chunk)
 
-        results.append([temp, text.encode('utf-8')])
+        add_page_with_text_to_database(wb, text)
 
-    return results
+        # prepare soup
+        # soup = BeautifulSoup(page, "html.parser")
+
+        for link in soup.find_all('a'):
+            temp = link.get('href')
+
+            # print("$",temp,"$")
+
+            # skip empty
+            if temp is None:
+                continue
+            if len(temp) == 0:
+                continue
+            if temp.isspace():
+                continue
+            if temp == "?":
+                continue
+
+            # fix relative links
+            temp = urllib.parse.urljoin(wb, temp)
+            # print("Fixed relative", temp)
+
+            # throw away anchors
+            if temp[0] == '#':
+                continue
+
+            # cut anchors from urls at the end
+            if temp.rfind('#') != -1:
+                temp = temp[:temp.rfind('#')]
+
+            # throwaway javascript: , mailto: and anything like them
+            if temp[:4] != "http":
+                continue
+
+            if self.remove_external_links:
+                base_pos = temp.find(self.base)
+                sl = temp[8:].find("/") + 8
+                # print("For", temp, "base_pos =", base_pos, "sl =", sl)
+                if base_pos == -1 or (sl != -1 and sl < base_pos):
+                    continue
+            # print("Adding", temp)
+            results.add(temp)
+        return results
+
+    def worker(self):
+        debug = True
+
+        while True:
+            # get task from queue
+            current = self.q.get()
+
+            # are we done yet?
+            if current is None:
+                break
+
+            current_depth = current[0]
+            current_url = current[1]
+            new_depth = current_depth + 1
+
+            # check if it has not been taken
+            with self.processed_lock:
+                if debug:
+                    print(threading.current_thread().name, "requests", current_depth, current_url)
+                self.processed.add(current_url)
+
+            # should we go below that depth?
+            if current_depth > self.depth:
+                print("Break because of depth")
+                break
+
+            # do the work
+            res = self.get_outlinks(current_url)
+
+            # add new links to the queue
+            if new_depth <= self.depth:
+                with self.processed_lock:
+                    for item in res:
+                        if self.robot_parser.can_fetch("*", item):
+                            if item not in self.processed:
+                                should_insert = True
+                                for i in list(self.q.queue):
+                                    if item == i[1]:
+                                        should_insert = False
+                                        break
+                                if should_insert and \
+                                        (self.current_pages_processed < self.pages_limit or self.pages_limit == 0):
+                                    self.q.put((new_depth, item))
+                                    add_page_pair_to_database(current_url,item)
+                                    self.current_pages_processed += 1
+                        else:
+                            print("Restricted by robots.txt", item)
+
+            self.q.task_done()
+        print(threading.current_thread().name, "is done. Bye-bye")
+
+    def start_crawler(self):
+        start = time.time()
+
+        # read robots.txt
+        self.robot_parser.set_url("http://" + self.base + "/robots.txt")
+        self.robot_parser.read()
+
+        # put first link
+        self.q.put((0, self.website))
+
+        threads = []
+        for x in range(self.threads_number):
+            t = threading.Thread(target=self.worker)
+            t.daemon = True
+            threads.append(t)
+            t.start()
+
+        # wait until the queue becomes empty
+        self.q.join()
+
+        # join threads
+        for i in range(self.threads_number):
+            self.q.put(None)
+        for t in threads:
+            t.join()
+
+        # empty the queue
+        self.q.queue.clear()
+
+        end = time.time()
+        print("With", self.threads_number, "threads elapsed : ", end - start)
+        print("Total number of pages processed :", self.current_pages_processed)
 
 
 @crawler_app.get('/crawler')
@@ -150,21 +300,13 @@ def getOutlinks(website, removeExternalLinks):
 def crawler():
     form = CrawlerFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
-        results = getOutlinks(form.url.data, form.uel.data)
-        for page in results:
-            url = page[0]
-            text = page[1]
-            new_page = Page(url=url, text=text, rank=0)
-            try:
-                if session.query(Page).filter(Page.url == url).count() == 0:
-                    print("Added: " + url)
-                    session.add(new_page)
-                    session.commit()
-            except:
-                session.rollback()
-                raise
-            finally:
-                session.close()
+        crawl = Crawler(website=form.url.data,
+                        depth=3,
+                        pages_limit=20,
+                        threads_number=8,
+                        remove_external_links=not form.uel.data )
+
+        crawl.start_crawler()
         session.commit()
         print("Finish: " + form.url.data)
         redirect("/pages")
