@@ -44,9 +44,8 @@ db_lock = threading.Lock()
 
 def add_page_with_text_to_database(page, text):
     with db_lock:
-        q = session.query(Page).filter(Page.url == page)
-        obj = q.first()
-        obj.text = text
+        q = session.query(Page).filter(Page.url == page).scalar()
+        q.text = text
         #session.commit()
 
 

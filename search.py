@@ -40,7 +40,7 @@ def search(s_req):
         redirect("/search/" + req)
 
     query = session.query(Page)
-    pages = ss.search(query, s_req).order_by(desc(Page.rank))
+    pages = ss.search(query, s_req).order_by(desc(Page.rank)).limit(50)
 
     return locals()
 
