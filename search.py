@@ -7,7 +7,7 @@ from sqlalchemy_searchable import search
 
 from model import Page, Base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.engine.url import URL
 
 import config
@@ -40,8 +40,7 @@ def search(s_req):
         redirect("/search/" + req)
 
     query = session.query(Page)
-    pages = ss.search(query, '123')
-    print(pages.all())
+    pages = ss.search(query, s_req).order_by(desc(Page.rank))
 
     return locals()
 

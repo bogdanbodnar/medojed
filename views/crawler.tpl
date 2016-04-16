@@ -37,6 +37,7 @@
     <form class="form-horizontal" role="form" method="POST">
         %render_field(form.url)
         %render_field(form.depth)
+        %render_field(form.threads)
         %render_field(form.max_pages)
         %render_field(form.uel)
         <div class="form-group row">
