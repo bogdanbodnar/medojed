@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import Column, ForeignKey, Integer, UnicodeText, String,Unicode
+from sqlalchemy import Column, ForeignKey, Integer, UnicodeText, String, Unicode, Sequence
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -14,9 +14,10 @@ import config
 Base = declarative_base()
 make_searchable()
 
+
 class Page(Base):
     __tablename__ = 'page'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Sequence('page_id_seq'), primary_key=True)
     url = Column(Unicode(255), unique=True)
     text = Column(UnicodeText())
     rank = Column(Integer)

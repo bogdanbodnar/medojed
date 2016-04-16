@@ -25,6 +25,7 @@ def pages():
 @pages_app.route('/pages/remove')
 @view('pages')
 def page_remove_all():
+    session.query(Relation).delete()
     session.query(Page).delete()
     session.commit()
     redirect("/pages")
