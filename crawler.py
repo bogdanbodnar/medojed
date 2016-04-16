@@ -42,13 +42,22 @@ db_lock = threading.Lock()
 
 def add_page_with_text_to_database(page, text):
     with db_lock:
+        global cm
+        cm+=1
         new_page = Page(url=page, text=text, rank=0)
         try:
-            if session.query(Page).filter(Page.url == page).count() == 0:
-                print("Added: " + page)
+            q = session.query(Page).filter(Page.url == page)
+            if q.count() == 0:
+                print('Added to "page" db: ' + page)
                 session.add(new_page)
                 session.commit()
+            else:
+                obj = q.first()
+                obj.text = text
+                session.commit()
         except:
+            global cmexcept
+            cmexcept += 1
             session.rollback()
             raise
         finally:
@@ -56,7 +65,26 @@ def add_page_with_text_to_database(page, text):
 
 
 def add_page_pair_to_database(from_page, to_page):
-    print("From:", from_page, "to:", to_page)
+    with db_lock:
+        cou = session.query(Page).filter(Page.url == from_page).count()
+        cou1 = session.query(Page).filter(Page.url == to_page).count()
+        if cou == 0:
+            new_page = Page(url=from_page, text="", rank=0)
+            session.add(new_page)
+            session.commit()
+        if cou1 == 0:
+            new_page = Page(url=to_page, text="", rank=0)
+            session.add(new_page)
+            session.commit()
+        i = session.query(Page).filter(Page.url == from_page).first()
+        i1 = session.query(Page).filter(Page.url == to_page).first()
+
+        new_relation = Relation(page_id = i.id, destination_id = i1.id)
+        # print(new_relation.page_id.id)
+        session.add(new_relation)
+        session.commit()
+
+        # print('Added to "relation" db: ', i.id, i1.id)
 
 
 class Crawler:
@@ -231,9 +259,9 @@ class Crawler:
                 self.processed.add(current_url)
 
             # should we go below that depth?
-            if current_depth > self.depth:
-                print("Break because of depth")
-                break
+            # if current_depth > self.depth:
+            #     print("Break because of depth")
+            #     break
 
             # do the work
             res = self.get_outlinks(current_url)
@@ -300,9 +328,12 @@ class Crawler:
 def crawler():
     form = CrawlerFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
+        session.query(Relation).delete()
+        session.query(Page).delete()
+        session.commit()
         crawl = Crawler(website=form.url.data,
                         depth=3,
-                        pages_limit=20,
+                        pages_limit=200,
                         threads_number=8,
                         remove_external_links=not form.uel.data )
 
