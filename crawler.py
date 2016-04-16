@@ -44,45 +44,36 @@ db_lock = threading.Lock()
 
 def add_page_with_text_to_database(page, text):
     with db_lock:
-        new_page = Page(url=page, text=text, rank=0)
-        try:
-            q = session.query(Page).filter(Page.url == page)
-            if q.count() == 0:
-                print('Added to "page" db: ' + page)
-                session.add(new_page)
-                session.commit()
-            else:
-                obj = q.first()
-                obj.text = text
-                session.commit()
-        except:
-            global cmexcept
-            cmexcept += 1
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        q = session.query(Page).filter(Page.url == page)
+        obj = q.first()
+        obj.text = text
+        #session.commit()
 
 
 def add_page_pair_to_database(from_page, to_page):
     with db_lock:
-        cou = session.query(Page).filter(Page.url == from_page).count()
-        cou1 = session.query(Page).filter(Page.url == to_page).count()
-        if cou == 0:
-            new_page = Page(url=from_page, text="", rank=0)
-            session.add(new_page)
-            session.commit()
-        if cou1 == 0:
-            new_page = Page(url=to_page, text="", rank=0)
-            session.add(new_page)
-            session.commit()
-        i = session.query(Page).filter(Page.url == from_page).first()
-        i1 = session.query(Page).filter(Page.url == to_page).first()
+        cou = session.query(Page.id).filter(Page.url == from_page).scalar()
+        cou1 = session.query(Page.id).filter(Page.url == to_page).scalar()
+        if cou is None:
+            new_page_from = Page(url=from_page, text="", rank=0)
+            session.add(new_page_from)
+            session.flush()
+            id0 = new_page_from.id
+        else:
+            id0 = cou
 
-        new_relation = Relation(page_id = i.id, destination_id = i1.id)
+        if cou1 is None:
+            new_page_to = Page(url=to_page, text="", rank=0)
+            session.add(new_page_to)
+            session.flush()
+            id1 = new_page_to.id
+        else:
+            id1 = cou1
+
+        new_relation = Relation(page_id = id0, destination_id = id1)
         # print(new_relation.page_id.id)
         session.add(new_relation)
-        session.commit()
+        #session.commit()
 
         # print('Added to "relation" db: ', i.id, i1.id)
 
@@ -270,6 +261,9 @@ class Crawler:
             # do the work
             res = self.get_outlinks(current_url)
 
+            for i in res:
+                add_page_pair_to_database(current_url, i)
+
             # add new links to the queue
             if new_depth <= self.depth:
                 with self.processed_lock:
@@ -284,7 +278,6 @@ class Crawler:
                                 if should_insert and \
                                         (self.current_pages_processed < self.pages_limit or self.pages_limit == 0):
                                     self.q.put((new_depth, item))
-                                    add_page_pair_to_database(current_url,item)
                                     self.current_pages_processed += 1
                         else:
                             print("Restricted by robots.txt", item)
@@ -301,6 +294,9 @@ class Crawler:
 
         # put first link
         self.q.put((0, self.website))
+        new_page = Page(url=self.website, text="", rank=0)
+        session.add(new_page)
+        session.flush()
 
         threads = []
         for x in range(self.threads_number):

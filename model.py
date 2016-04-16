@@ -18,7 +18,7 @@ make_searchable()
 class Page(Base):
     __tablename__ = 'page'
     id = Column(Integer, primary_key=True)
-    url = Column(Unicode(255), unique=True)
+    url = Column(Unicode(1024), unique=True)
     text = Column(UnicodeText())
     rank = Column(Float)
     search_vector = Column(TSVectorType('text', 'url'))
