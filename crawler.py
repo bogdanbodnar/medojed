@@ -32,10 +32,11 @@ session = DBSession()
 
 
 class CrawlerFormProcessor(Form):
-    url = StringField('URL', [validators.URL(require_tld=False, message="Must be valid URL")],
+    url = StringField('URL', [validators.URL(require_tld=False, message="Must be valid URL")], default="http://",
                       render_kw={"placeholder": "https://example.com"})
-    depth = IntegerField('Depth', [validators.NumberRange(min=1, message="Must be > 0")], default=1)
-    max_pages = IntegerField('Maximum pages', [validators.NumberRange(min=1, message="Must be > 0")], default=1000)
+    depth = IntegerField('Max depth', [validators.NumberRange(min=1, message="Must be > 0")], default=3)
+    threads = IntegerField('Threads', [validators.NumberRange(min=1, message="Must be > 0")], default=16)
+    max_pages = IntegerField('Maximum pages', [validators.NumberRange(min=1, message="Must be > 0")], default=500)
     uel = BooleanField('Include external links')
 
 db_lock = threading.Lock()
@@ -98,7 +99,11 @@ class Crawler:
         self.base = self.make_base(self.website)
         print("Crawler initialized!")
         print("Website = ", self.website)
+        print("Depth = ", self.depth)
+        print("Pages_limit = ", self.pages_limit)
+        print("Threads_number = ", self.threads_number)
         print("Base = ", self.base)
+        print("External removed = ", self.remove_external_links)
 
         # threading
         self.q = Queue()
@@ -330,9 +335,9 @@ def crawler():
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
         crawl = Crawler(website=form.url.data,
-                        depth=3,
-                        pages_limit=200,
-                        threads_number=8,
+                        depth=form.depth.data,
+                        pages_limit=form.max_pages.data,
+                        threads_number=form.threads.data,
                         remove_external_links=not form.uel.data )
 
         crawl.start_crawler()

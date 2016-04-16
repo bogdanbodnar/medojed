@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import Column, ForeignKey, Integer, UnicodeText, String, Unicode, Sequence
+from sqlalchemy import Column, ForeignKey, Integer, UnicodeText, String, Unicode, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -20,7 +20,7 @@ class Page(Base):
     id = Column(Integer, primary_key=True)
     url = Column(Unicode(255), unique=True)
     text = Column(UnicodeText())
-    rank = Column(Integer)
+    rank = Column(Float)
     search_vector = Column(TSVectorType('text', 'url'))
 
 
