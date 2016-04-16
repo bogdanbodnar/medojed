@@ -40,10 +40,9 @@ class CrawlerFormProcessor(Form):
 
 db_lock = threading.Lock()
 
+
 def add_page_with_text_to_database(page, text):
     with db_lock:
-        global cm
-        cm+=1
         new_page = Page(url=page, text=text, rank=0)
         try:
             q = session.query(Page).filter(Page.url == page)
@@ -328,9 +327,8 @@ class Crawler:
 def crawler():
     form = CrawlerFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
-        session.query(Relation).delete()
-        session.query(Page).delete()
-        session.commit()
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(engine)
         crawl = Crawler(website=form.url.data,
                         depth=3,
                         pages_limit=200,

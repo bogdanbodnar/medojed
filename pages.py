@@ -22,6 +22,7 @@ def pages():
     return locals()
 
 
+#not sure if needed
 @pages_app.route('/pages/remove')
 @view('pages')
 def page_remove_all():

@@ -17,7 +17,7 @@ make_searchable()
 
 class Page(Base):
     __tablename__ = 'page'
-    id = Column(Integer, Sequence('page_id_seq'), primary_key=True)
+    id = Column(Integer, primary_key=True)
     url = Column(Unicode(255), unique=True)
     text = Column(UnicodeText())
     rank = Column(Integer)
