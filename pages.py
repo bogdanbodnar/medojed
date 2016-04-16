@@ -22,7 +22,7 @@ session = DBSession()
 @pages_app.route('/pages')
 @view('pages')
 def pages():
-    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).all()
+    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).limit(50).all()
     return locals()
 
 
@@ -44,12 +44,13 @@ def pagerank():
         if ito > size:
             size = ito
 
-    #print("Size =", size)
+    print(time.time()-start_time, ": Copying")
 
     # init pagerank to 1/n
     pr = np.zeros(size)
     pr.fill(1 / size)
 
+    stochastic_time = time.time()
     # build a stochastic matrix
     s = np.zeros((size, size))
     sumOnRow = 0
@@ -74,6 +75,8 @@ def pagerank():
         s[row] = 1 / size
         row += 1
 
+    print(time.time() - stochastic_time, ": building stochastic matrix")
+
     # build E matrix
     e = np.zeros((size, size))
     e.fill(1 / size)
@@ -81,24 +84,30 @@ def pagerank():
     # set a parameter, Google uses 0.85, ČVUT uses 0.9
     a = 0.85
 
+
+    g_time = time.time()
     # build Google matrix
     g = s * a + (1 - a) * e
+    print(time.time() - g_time, ": building google matrix")
 
-    # print(g)
+    iter_time = time.time()
     # iterate
     iter = 0
     while iter < 50:
         pr = np.dot(pr, g)
         iter += 1
+    print(time.time() - iter_time, ": iterating")
 
     # print(pr)
 
+    db_time = time.time()
     for i in session.query(Page).all():
         i.rank = pr[i.id - 1]
     session.commit()
+    print(time.time() - db_time, ": writing back")
 
     end_time = time.time()
-    print("Processing",size,"x",size,"matrix took",end_time-start_time)
+    print(end_time-start_time,": total time for processing",size,"x",size,"matrix")
     redirect("/pages")
     return locals()
 
