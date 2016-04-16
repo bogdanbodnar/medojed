@@ -9,6 +9,8 @@ import config
 
 import numpy as np
 
+import time
+
 pages_app = Bottle()
 
 engine = create_engine(URL(**config.DATABASE))
@@ -27,6 +29,9 @@ def pages():
 @pages_app.route('/pages/rank')
 @view('pages')
 def pagerank():
+
+    start_time = time.time()
+
     graph = []
     size = 0
     for i in session.query(Relation).order_by(Relation.page_id).all():
@@ -92,7 +97,8 @@ def pagerank():
         i.rank = pr[i.id - 1]
     session.commit()
 
-
+    end_time = time.time()
+    print("Processing",size,"x",size,"matrix took",end_time-start_time)
     redirect("/pages")
     return locals()
 
