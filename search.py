@@ -34,13 +34,16 @@ class SearchFormProcessor(Form):
 @search_app.post('/search/<s_req>')
 @view('search_req')
 def search(s_req):
+    print("Beep")
     form = SearchFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
         req = form.request.data
         redirect("/search/" + req)
 
     query = session.query(Page)
-    pages = ss.search(query, s_req).order_by(desc(Page.rank)).limit(50)
+    sssearch = ss.search(query, s_req).order_by(desc(Page.rank))
+    pages = sssearch.limit(50)
+    total_pages = sssearch.count()
 
     return locals()
 
@@ -49,6 +52,7 @@ def search(s_req):
 @search_app.post('/search')
 @view('search')
 def search():
+    print("Boop")
     form = SearchFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
         req = form.request.data
