@@ -1,14 +1,10 @@
 from bottle import view, redirect, Bottle
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from model import Base, Page, Relation
 from sqlalchemy.engine.url import URL
-
 import config
-
 import numpy as np
-
 import time
 
 pages_app = Bottle()
@@ -18,13 +14,22 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+@pages_app.route('/pages/<num>')
+@view('pages')
+def pages_(num):
+    on_page = 50
+    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).offset(on_page*(int(num)-1)).limit(on_page).all()
+    total_pages = session.query(Page).count()
+    return locals()
 
 @pages_app.route('/pages')
 @view('pages')
 def pages():
-    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).limit(50).all()
+    num = 1
+    on_page = 50
+    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).limit(on_page).all()
+    total_pages = session.query(Page).count()
     return locals()
-
 
 @pages_app.route('/pages/rank')
 @view('pages')
@@ -110,5 +115,8 @@ def pagerank():
     print(end_time-start_time,": total time for processing",size,"x",size,"matrix")
     redirect("/pages")
     return locals()
+
+
+
 
 

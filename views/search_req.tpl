@@ -1,9 +1,8 @@
 % include('search.tpl')
 
-%for page in pages:
-<p><b>URL:</b><a href={{page.url}}> {{page.url}} </a><p>
-<p><b>Rank:</b> {{page.rank}}</p>
-<br>
-%end
-<h3>Limited by 50</h3>
+% include('page_view.tpl')
+
+%if total_pages == 0:
+    <p>Nothing found</p>
+
 <br>
