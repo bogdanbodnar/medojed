@@ -27,7 +27,7 @@ session = DBSession()
 
 
 class SearchFormProcessor(Form):
-    request = StringField('Request:', [validators.length(min=3)], render_kw={"placeholder": "Request example"})
+    request = StringField('Request:', [validators.length(min=3)], render_kw={"autofocus": "autofocus"})
 
 
 @search_app.get('/search/<s_req>')
