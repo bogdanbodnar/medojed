@@ -14,20 +14,16 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-@pages_app.route('/pages/<num>')
-@view('pages')
-def pages_(num):
-    on_page = 50
-    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).offset(on_page*(int(num)-1)).limit(on_page).all()
-    total_pages = session.query(Page).count()
-    return locals()
+pages_limit = 20
 
+@pages_app.route('/pages/<num>')
 @pages_app.route('/pages')
 @view('pages')
-def pages():
-    num = 1
-    on_page = 50
-    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).limit(on_page).all()
+def pages_(num = 1):
+    global pages_limit
+    pages_to_display = pages_limit
+    current_page = int(num)
+    pages = session.query(Page).order_by(Page.rank.desc(), Page.url).offset(pages_to_display*(current_page-1)).limit(pages_to_display).all()
     total_pages = session.query(Page).count()
     return locals()
 

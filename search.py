@@ -21,29 +21,40 @@ Base.metadata.bind = engine
 sa.orm.configure_mappers()
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+import time
 
 
 # Base = declarative_base()
 
+pages_limit = 20
 
 class SearchFormProcessor(Form):
     request = StringField('Request:', [validators.length(min=3)], render_kw={"autofocus": "autofocus"})
 
-
+@search_app.get('/search/<s_req>/<num>')
+@search_app.post('/search/<s_req>/<num')
 @search_app.get('/search/<s_req>')
 @search_app.post('/search/<s_req>')
 @view('search_req')
-def search(s_req):
+def search(s_req, num = 1):
     print("Beep")
     form = SearchFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
         req = form.request.data
         redirect("/search/" + req)
 
+    start_time = time.time()
+
     query = session.query(Page)
     sssearch = ss.search(query, s_req).order_by(desc(Page.rank))
+
+    global pages_limit
+    pages_to_display = pages_limit
     pages = sssearch.limit(50)
     total_pages = sssearch.count()
+    current_page = int(num)
+
+    total_time = time.time() - start_time
 
     return locals()
 
