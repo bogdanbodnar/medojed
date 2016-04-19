@@ -13,18 +13,17 @@ from sqlalchemy.engine.url import URL
 import config
 import sqlalchemy as sa
 import sqlalchemy_searchable as ss
-
+import time
 search_app = Bottle()
 
-engine = create_engine(URL(**config.DATABASE))
-Base.metadata.bind = engine
-sa.orm.configure_mappers()
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
-import time
-
-
+# engine = create_engine(URL(**config.DATABASE))
+# Base.metadata.bind = engine
+# sa.orm.configure_mappers()
+# DBSession = sessionmaker(bind=engine)
+# session = DBSession()
 # Base = declarative_base()
+
+from model import session
 
 pages_limit = 20
 

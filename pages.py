@@ -9,10 +9,12 @@ import time
 
 pages_app = Bottle()
 
-engine = create_engine(URL(**config.DATABASE))
-Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+# engine = create_engine(URL(**config.DATABASE))
+# Base.metadata.bind = engine
+# DBSession = sessionmaker(bind=engine)
+# session = DBSession()
+
+from model import session
 
 pages_limit = 20
 
