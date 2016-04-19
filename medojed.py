@@ -1,8 +1,8 @@
 from bottle import Bottle, static_file, view
-
 from crawler import crawler_app
 from pages import pages_app
 from search import search_app
+import model
 
 root_app = Bottle()
 

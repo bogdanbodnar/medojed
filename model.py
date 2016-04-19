@@ -1,8 +1,9 @@
 import os
 
+import sqlalchemy as sa
 from sqlalchemy import Column, ForeignKey, Integer, UnicodeText, String, Unicode, Float
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
@@ -33,3 +34,10 @@ class Relation(Base):
 
 engine = create_engine(URL(**config.DATABASE))
 Base.metadata.create_all(engine)
+
+engine = create_engine(URL(**config.DATABASE))
+sa.orm.configure_mappers()
+Base.metadata.create_all(engine)
+
+DBSession = sessionmaker(bind=engine)
+session = DBSession()

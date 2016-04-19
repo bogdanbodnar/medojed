@@ -22,13 +22,13 @@ import gzip
 
 crawler_app = Bottle()
 
-engine = create_engine(URL(**config.DATABASE))
-# Base.metadata.bind = engine
-sa.orm.configure_mappers()
-Base.metadata.create_all(engine)
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+# engine = create_engine(URL(**config.DATABASE))
+# sa.orm.configure_mappers()
+# Base.metadata.create_all(engine)
+#
+# DBSession = sessionmaker(bind=engine)
+# session = DBSession()
+from model import session, engine
 
 
 class CrawlerFormProcessor(Form):
@@ -327,6 +327,7 @@ class Crawler:
 def crawler():
     form = CrawlerFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
+        session.commit()
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
         crawl = Crawler(website=form.url.data,
