@@ -24,6 +24,15 @@
     </div>
     %end
 
+    %if field.type == "RadioField":
+    <!--{{!field.label(class_="col-sm-2")}}-->
+    <div class="col-sm-offset-2">
+        <div class="radio" align="left">
+            <label>{{!field}}</label>
+        </div>
+    </div>
+    %end
+
     %if desc:
     {{!desc}}
     %end
@@ -42,6 +51,7 @@
     <form class="form-horizontal" role="form" action="/pages/rank" method="POST">
         %render_field(form.alpha)
         %render_field(form.iterations)
+        %render_field(form.choice_switcher)
         <div class="form-group row">
             <div class="col-sm-offset-1 col-sm-10">
                 <input class="btn btn-primary"  type="submit" value="Rank!">
