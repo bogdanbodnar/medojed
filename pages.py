@@ -1,4 +1,4 @@
-from bottle import view, redirect, Bottle
+from bottle import view, redirect, Bottle, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from model import Base, Page, Relation
@@ -6,6 +6,7 @@ from sqlalchemy.engine.url import URL
 import config
 import numpy as np
 import time
+from wtforms import Form, StringField, IntegerField, FloatField, validators
 
 pages_app = Bottle()
 
@@ -18,10 +19,15 @@ from model import session
 
 pages_limit = 20
 
+class CrawlerFormProcessor(Form):
+    alpha = FloatField('α', [validators.NumberRange(min=0.001, max = 0.999, message="0 < α < 1")], default=0.85)
+    iterations = IntegerField('Iterations', [validators.NumberRange(min=0, message="Should be positive")], default=50)
+
 @pages_app.route('/pages/<num>')
 @pages_app.route('/pages')
 @view('pages')
 def pages_(num = 1):
+    form = CrawlerFormProcessor(request.forms.decode())
     global pages_limit
     pages_to_display = pages_limit
     current_page = int(num)
@@ -29,9 +35,15 @@ def pages_(num = 1):
     total_pages = session.query(Page).count()
     return locals()
 
+@pages_app.post('/pages/rank')
 @pages_app.route('/pages/rank')
 @view('pages')
 def pagerank():
+    form = CrawlerFormProcessor(request.forms.decode())
+    print(form.alpha.data, form.iterations.data)
+
+    a = form.alpha.data
+    iterations = form.iterations.data
 
     start_time = time.time()
 
@@ -85,7 +97,7 @@ def pagerank():
     e.fill(1 / size)
     #
     # set a parameter, Google uses 0.85, ČVUT uses 0.9
-    a = 0.85
+
 
 
     g_time = time.time()
@@ -96,7 +108,7 @@ def pagerank():
     iter_time = time.time()
     # iterate
     iter = 0
-    while iter < 50:
+    while iter < iterations:
         pr = np.dot(pr, g)
         iter += 1
     print(time.time() - iter_time, ": iterating")

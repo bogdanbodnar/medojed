@@ -36,7 +36,7 @@ class CrawlerFormProcessor(Form):
                       render_kw={"placeholder": "https://example.com"})
     depth = IntegerField('Max depth', [validators.NumberRange(min=1, message="Must be > 0")], default=3)
     threads = IntegerField('Threads', [validators.NumberRange(min=1, message="Must be > 0")], default=16)
-    max_pages = IntegerField('Maximum pages', [validators.NumberRange(min=1, message="Must be > 0")], default=500)
+    max_pages = IntegerField('Maximum pages', [validators.NumberRange(min=0, message="Must be 0 or positive")], default=500)
     uel = BooleanField('Include external links')
 
 db_lock = threading.Lock()
@@ -49,10 +49,12 @@ def add_page_with_text_to_database(page, text):
         #session.commit()
 
 
-def add_page_pair_to_database(from_page, to_page):
+def add_page_pair_to_database(from_page, to_page, limit):
+
     with db_lock:
         cou = session.query(Page.id).filter(Page.url == from_page).scalar()
         cou1 = session.query(Page.id).filter(Page.url == to_page).scalar()
+
         if cou is None:
             new_page_from = Page(url=from_page, text="", rank=0)
             session.add(new_page_from)
@@ -62,6 +64,9 @@ def add_page_pair_to_database(from_page, to_page):
             id0 = cou
 
         if cou1 is None:
+            allowed = limit < 1 or limit > session.query(Page).count()
+            if not allowed:
+                return
             new_page_to = Page(url=to_page, text="", rank=0)
             session.add(new_page_to)
             session.flush()
@@ -260,11 +265,10 @@ class Crawler:
             # do the work
             res = self.get_outlinks(current_url)
 
-            for i in res:
-                add_page_pair_to_database(current_url, i)
-
             # add new links to the queue
             if new_depth <= self.depth:
+                for i in res:
+                    add_page_pair_to_database(current_url, i, self.pages_limit)
                 with self.processed_lock:
                     for item in res:
                         if self.robot_parser.can_fetch("*", item):
@@ -295,7 +299,7 @@ class Crawler:
         self.q.put((0, self.website))
         new_page = Page(url=self.website, text="", rank=0)
         session.add(new_page)
-        session.flush()
+        session.commit()
 
         threads = []
         for x in range(self.threads_number):
@@ -307,11 +311,14 @@ class Crawler:
         # wait until the queue becomes empty
         self.q.join()
 
+
         # join threads
         for i in range(self.threads_number):
             self.q.put(None)
         for t in threads:
             t.join()
+
+        session.commit()
 
         # empty the queue
         self.q.queue.clear()
