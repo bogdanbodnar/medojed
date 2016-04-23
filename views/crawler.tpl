@@ -2,6 +2,7 @@
 <div class="template">
     <h1>Crawler</h1>
 </div>
+
 %def render_field(field, desc=None, **kwargs):
 <div class="form-group row">
     %if field.type == "StringField" or field.type == "IntegerField":
