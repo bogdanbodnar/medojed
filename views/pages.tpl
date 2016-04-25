@@ -62,6 +62,7 @@
     </div>
 
 
+<p style="color:gray">{{total_pages}} pages in the database</p>
 
 % include('page_view.tpl')
 
