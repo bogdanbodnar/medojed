@@ -44,7 +44,7 @@
                     <li><a href="/search">Search</a></li>
                     <li><a href="/crawler">Crawler</a></li>
                     <!--<li><a href="#">Ranking</a></li>-->
-                    <li><a href="/pages">Pages</a></li>
+                    <li><a href="/pages">Pages & Rank</a></li>
                 </ul>
             </div>
         </div>
