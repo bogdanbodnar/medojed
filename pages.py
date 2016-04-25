@@ -139,7 +139,14 @@ def pagerank_computation (size, graph, alpha, iterations):
     # iterate
     iter = 0
     while iter < iterations:
+        diff = 0
+        oldl = [x for (y, x) in sorted(zip(pr, range(0, size)))]
         pr = np.dot(pr, g)
+        l = [x for (y, x) in sorted(zip(pr, range(0, size)))]
+        for i in range(0,size):
+            if oldl[i] != l[i]:
+                diff += 1
+        print("Iter", iter, "diff:", diff)
         iter += 1
     print(time.time() - iter_time, ": iterating")
 
@@ -180,9 +187,16 @@ def pagerank_power (size, graph, alpha, iterations):
     mark = time.time()
     iter = 0
     while iter < iterations:
+        diff = 0
+        oldl = [x for (y, x) in sorted(zip(pr, range(0, size)))]
         # mark = time.time()
         # pr = alpha * pr * H + (alpha * pr * a + 1 - alpha) * e / size
         pr = alpha * pr.dot(H) + (alpha * pr.dot(a) + 1 - alpha) * e / size
+        l = [x for (y, x) in sorted(zip(pr, range(0, size)))]
+        for i in range(0, size):
+            if oldl[i] != l[i]:
+                diff += 1
+        print("Iter", iter, "diff:", diff)
         iter += 1
     print(time.time() - mark, "Iterating")
 
