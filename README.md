@@ -10,6 +10,13 @@ $ cd medojed
 Install and upgrade `virtualenv`:
 ```
 $ pyvenv ./env
+```
+Or if you have no pyvenv:
+```
+virtualenv -p python3.5 env
+```
+Activate env:
+```
 $ source env/bin/activate
 (env) $ pip install --upgrade pip 
 ```
