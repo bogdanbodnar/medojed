@@ -36,14 +36,12 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <!--<a class="navbar-brand" href="/">Medojed</a>-->
         </div>
         <div class="navbar-header">
             <div id="navbar" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
                     <li><a href="/search">Search</a></li>
                     <li><a href="/crawler">Crawler</a></li>
-                    <!--<li><a href="#">Ranking</a></li>-->
                     <li><a href="/pages">Pages & Rank</a></li>
                 </ul>
             </div>

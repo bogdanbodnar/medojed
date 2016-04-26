@@ -1,10 +1,4 @@
 % rebase('base.tpl', title='Medojed - Pages')
-<!--<div class="template">-->
-    <!--<form action="/pages/rank">-->
-    <!--<input class="btn btn-primary"  type="submit" value="Rank!">-->
-<!--</form>-->
-<!--</div>-->
-
 
 %def render_field(field, desc=None, **kwargs):
 <div class="form-group row">
@@ -25,7 +19,6 @@
     %end
 
     %if field.type == "RadioField":
-    <!--{{!field.label(class_="col-sm-2")}}-->
     <div class="col-sm-offset-2">
         <div class="radio" align="left">
             <label>{{!field}}</label>
