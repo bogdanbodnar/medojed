@@ -3,13 +3,7 @@ from wtforms import Form, StringField, IntegerField, BooleanField, validators
 
 import urllib.request
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from model import Base, Page, Relation
-from sqlalchemy.engine.url import URL
-import sqlalchemy as sa
-
-import config
 
 import urllib.request
 import urllib.parse
@@ -22,12 +16,6 @@ import gzip
 
 crawler_app = Bottle()
 
-# engine = create_engine(URL(**config.DATABASE))
-# sa.orm.configure_mappers()
-# Base.metadata.create_all(engine)
-#
-# DBSession = sessionmaker(bind=engine)
-# session = DBSession()
 from model import session, engine
 
 
@@ -44,10 +32,14 @@ db_lock = threading.Lock()
 
 def add_page_with_text_to_database(page, text):
     with db_lock:
-        q = session.query(Page).filter(Page.url == page).scalar()
-        if q is not None:
-            q.text = text
-        session.commit()
+        try:
+            q = session.query(Page).filter(Page.url == page).scalar()
+            if q is not None:
+                q.text = text
+            session.commit()
+        except:
+            #ignore error
+            raise
 
 
 def add_page_pair_to_database(from_page, to_page, limit):

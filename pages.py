@@ -1,19 +1,11 @@
 from bottle import view, redirect, Bottle, request
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, load_only
 from model import Base, Page, Relation
-from sqlalchemy.engine.url import URL
-import config
 import numpy as np
 import time
 from wtforms import Form, RadioField, IntegerField, FloatField, validators
 
 pages_app = Bottle()
-
-# engine = create_engine(URL(**config.DATABASE))
-# Base.metadata.bind = engine
-# DBSession = sessionmaker(bind=engine)
-# session = DBSession()
 
 from model import session
 
@@ -125,8 +117,6 @@ def pagerank_computation (size, graph, alpha, iterations):
     #
     # set a parameter, Google uses 0.85, ČVUT uses 0.9
 
-
-
     g_time = time.time()
     # build Google matrix
     g = s * alpha + (1 - alpha) * e
@@ -148,6 +138,7 @@ def pagerank_computation (size, graph, alpha, iterations):
     print(time.time() - iter_time, ": iterating")
 
     return pr
+
 
 def pagerank_power (size, graph, alpha, iterations):
     # build a stochastic matrix
@@ -198,4 +189,3 @@ def pagerank_power (size, graph, alpha, iterations):
     print(time.time() - mark, "Iterating")
 
     return pr
-

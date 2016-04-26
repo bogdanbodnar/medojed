@@ -32,10 +32,7 @@ class Relation(Base):
     destination_id = Column(Integer)
     page = relationship(Page)
 
-engine = create_engine(URL(**config.DATABASE))
-Base.metadata.create_all(engine)
-
-engine = create_engine(URL(**config.DATABASE))
+engine = create_engine(URL(**config.DATABASE), client_encoding='utf8')
 sa.orm.configure_mappers()
 Base.metadata.create_all(engine)
 
