@@ -1,10 +1,7 @@
 from bottle import Bottle, view, request, redirect
 from wtforms import Form, StringField, IntegerField, BooleanField, validators
-
 import urllib.request
-
 from model import Base, Page, Relation
-
 import urllib.request
 import urllib.parse
 import urllib.robotparser
@@ -29,6 +26,19 @@ class CrawlerFormProcessor(Form):
 
 db_lock = threading.Lock()
 
+def is_ascii(s):
+    return all(ord(c) < 128 for c in s)
+
+def fix_non_ascii (wb):
+    # fix website link
+    url = wb
+    url = urllib.parse.urlsplit(url)
+    url = list(url)
+    for i in range(1, 5):
+        url[i] = urllib.parse.quote(url[i])
+    wb = urllib.parse.urlunsplit(url)
+    return wb
+
 
 def add_page_with_text_to_database(page, text):
     with db_lock:
@@ -36,7 +46,7 @@ def add_page_with_text_to_database(page, text):
             q = session.query(Page).filter(Page.url == page).scalar()
             if q is not None:
                 q.text = text
-            session.commit()
+                session.commit()
         except:
             #ignore error
             raise
@@ -80,6 +90,8 @@ class Crawler:
     def __init__(self, website, depth=3, pages_limit=0, threads_number=16, remove_external_links=True):
         # settings
         self.website = self.make_requestable_link(website)
+        if not is_ascii(self.website):
+            self.website = fix_non_ascii(self.website)
         self.depth = depth
         self.pages_limit = pages_limit
         self.threads_number = threads_number
@@ -116,12 +128,15 @@ class Crawler:
     @classmethod
     def make_base(cls, website):
         # domain base
-        temp_base = website[7:]
+        if website.find("https") == 0:
+            temp_base = website[8:]
+        else:
+            temp_base = website[7:]
         slash_pos = temp_base.find('/')
+
         if slash_pos != -1:
             temp_base = temp_base[:slash_pos]
         temp_base = ".".join(temp_base.split(".")[-2:])
-        # print("Base =", temp_base)
         return temp_base
 
     def get_outlinks(self, wb):
@@ -129,7 +144,10 @@ class Crawler:
         # init resulting set
         results = set()
 
-        # print('Website link :', wb)
+        #fix link if needed
+        if not is_ascii(wb):
+            wb = fix_non_ascii(wb)
+
         request = urllib.request.Request(
             wb,
             headers={
@@ -141,7 +159,6 @@ class Crawler:
         try:
             with urllib.request.urlopen(request, timeout=15) as url:
                 info = url.info()
-                # print(info["Content-Encoding"])
                 if info["Content-Encoding"] == "gzip":
                     gzip_ = True
         except IOError as e:
@@ -191,8 +208,6 @@ class Crawler:
         for link in soup.find_all('a'):
             temp = link.get('href')
 
-            # print("$",temp,"$")
-
             # skip empty
             if temp is None:
                 continue
@@ -205,7 +220,6 @@ class Crawler:
 
             # fix relative links
             temp = urllib.parse.urljoin(wb, temp)
-            # print("Fixed relative", temp)
 
             # throw away anchors
             if temp[0] == '#':
@@ -225,7 +239,11 @@ class Crawler:
                 # print("For", temp, "base_pos =", base_pos, "sl =", sl)
                 if base_pos == -1 or (sl != -1 and sl < base_pos):
                     continue
+                if temp[base_pos-1] != ".":
+                    continue
             # print("Adding", temp)
+            if not is_ascii(temp):
+                temp = fix_non_ascii(temp)
             results.add(temp)
         return results
 
@@ -276,7 +294,7 @@ class Crawler:
                                     self.q.put((new_depth, item))
                                     self.current_pages_processed += 1
                         else:
-                            print("Restricted by robots.txt", item)
+                            print(threading.current_thread().name, "Restricted by robots.txt", item)
 
             self.q.task_done()
         print(threading.current_thread().name, "is done. Bye-bye")
@@ -285,7 +303,8 @@ class Crawler:
         start = time.time()
 
         # read robots.txt
-        self.robot_parser.set_url("http://" + self.base + "/robots.txt")
+        tmp = "http://" + self.base + "/robots.txt"
+        self.robot_parser.set_url(tmp)
         self.robot_parser.read()
 
         # put first link
