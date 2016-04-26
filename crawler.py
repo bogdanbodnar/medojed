@@ -78,7 +78,7 @@ def add_page_pair_to_database(from_page, to_page, limit):
         new_relation = Relation(page_id = id0, destination_id = id1)
         # print(new_relation.page_id.id)
         session.add(new_relation)
-        #session.commit()
+        session.commit()
 
         # print('Added to "relation" db: ', i.id, i1.id)
 
