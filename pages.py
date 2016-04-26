@@ -84,9 +84,6 @@ def pagerank():
     print(time.time() - db_time, ": writing back")
     end_time = time.time()
     print(end_time-start_time,": total time for processing",size,"x",size,"matrix")
-
-
-
     redirect("/pages")
     return locals()
 
