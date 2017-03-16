@@ -1,10 +1,10 @@
 # MEDOJED / HONEY BADGER
 Hypertext search web-application 
 
-##Installation
+## Installation
 Install `Medojed`: 
 ```
-$ git clone git@github.com:bodya3d/medojed.git
+$ git clone git@github.com:bogdanbodnar/medojed.git
 $ cd medojed
 ```
 Install and upgrade `virtualenv`:
@@ -48,7 +48,7 @@ medojed=# \quit
 (env) $ python model.py 
 ```
 
-##Run
+## Run
 Run Medojed from `run.py`:
 ```
 (env) $ python medojed.py
@@ -57,6 +57,4 @@ Go to http://localhost:8080/ and enjoy!
 
 ## Tasks
 
-- [ ] Multi-thread crawler
-- [ ] Full-text search
-- [ ] Ranking
+- [ ] Fix some bugs 
