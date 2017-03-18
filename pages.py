@@ -61,13 +61,17 @@ def pagerank():
 
     print(time.time()-start_time, ": Copying")
 
-    # ---------------------------------------------------------------------------------------------------------
-    if power:
-        pr = pagerank_power(size, graph, alpha, iterations)
+    if session.query(Relation).count() == 0:
+        size = 1
+        pr = np.array([1.0])
     else:
-        pr = pagerank_computation(size, graph, alpha, iterations)
+        # -------------------------------------------------------------
+        if power:
+            pr = pagerank_power(size, graph, alpha, iterations)
+        else:
+            pr = pagerank_computation(size, graph, alpha, iterations)
 
-    # ---------------------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------
 
     db_time = time.time()
     for i in session.query(Page).options(load_only("id", "text")).all():
