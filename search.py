@@ -20,7 +20,7 @@ class SearchFormProcessor(Form):
 @search_app.get('/search/<s_req>/<num>')
 @view('search_req')
 def search(s_req, num = 1):
-    print("Beep")
+    print("Processing search request", s_req)
     form = SearchFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
         req = form.request.data
@@ -47,7 +47,6 @@ def search(s_req, num = 1):
 @search_app.post('/search')
 @view('search')
 def search():
-    print("Boop")
     form = SearchFormProcessor(request.forms.decode())
     if request.method == 'POST' and form.validate():
         req = form.request.data

@@ -38,7 +38,7 @@ def pages_(num = 1):
 @view('pages')
 def pagerank():
     form = CrawlerFormProcessor(request.forms.decode())
-    print(form.alpha.data, form.iterations.data, form.choice_switcher.data)
+    print("Ranking with parameters :",form.alpha.data, form.iterations.data, form.choice_switcher.data)
 
     alpha = form.alpha.data
     iterations = form.iterations.data
